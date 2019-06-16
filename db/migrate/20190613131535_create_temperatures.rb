@@ -3,7 +3,7 @@ class CreateTemperatures < ActiveRecord::Migration[5.2]
     create_table :temperatures do |t|
       t.float :temperature
       t.string :location
-      t.timestamp
+      t.timestamps
     end
   end
 end

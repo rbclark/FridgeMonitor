@@ -7,3 +7,4 @@ gem "chartkick"
 gem "sqlite3"
 gem "rake"
 gem 'ds18b20'
+gem 'pry'

@@ -1,8 +1,10 @@
 
 require 'sinatra/base'
 require 'sinatra/contrib'
+require "sinatra/json"
 require 'chartkick'
 require "sinatra/activerecord"
+require 'active_support/all'
 
 class TemperatureMonitor < Sinatra::Base
   register Sinatra::Contrib
@@ -10,19 +12,19 @@ class TemperatureMonitor < Sinatra::Base
 
   set :database, {adapter: "sqlite3", database: "temperatures.sqlite3"}
 
-  Thread.new do # trivial example work thread
-    fridge = Ds18b20::Parser.new("/sys/bus/w1/devices/28-800000048d57/w1_slave")
-    while true do
-      
-      sleep 10
-    end
-  end
-
   get '/' do
-    @title = "Temperatures"
-    @fridge = {'2015-07-20 00:00:00 UTC' => 2, '2015-07-21 00:00:00 UTC' => 4, '2015-07-22 00:00:00 UTC' => 1, '2015-07-23 00:00:00 UTC' => 7}
-    @freezer = {}
     erb :chart
   end
 
+  get '/data.json' do
+    hours = params['hours'].to_i
+    binding.pry
+    res = Temperature.distinct.pluck(:location).map do |sensors|
+      { name: sensors, data: Temperature.where(location: sensors).where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York').to_formatted_s(:short), temp.temperature] }.to_h }
+    end << {name: "Max Acceptable", data: Temperature.all.where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York').to_formatted_s(:short), 40.0] }}
+    json res
+  end
+
 end
+
+class Temperature < ActiveRecord::Base; end
