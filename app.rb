@@ -6,6 +6,9 @@ require 'chartkick'
 require "sinatra/activerecord"
 require 'active_support/all'
 
+Time.zone = "America/New_York"
+ActiveRecord::Base.default_timezone = :utc
+
 class TemperatureMonitor < Sinatra::Base
   register Sinatra::Contrib
   register Sinatra::ActiveRecordExtension
@@ -20,8 +23,8 @@ class TemperatureMonitor < Sinatra::Base
     hours = params['hours'].to_i
     binding.pry
     res = Temperature.distinct.pluck(:location).map do |sensors|
-      { name: sensors, data: Temperature.where(location: sensors).where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York').to_formatted_s(:short), temp.temperature] }.to_h }
-    end << {name: "Max Acceptable", data: Temperature.all.where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York').to_formatted_s(:short), 40.0] }}
+      { name: sensors, data: Temperature.where(location: sensors).where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York'), temp.temperature] }.to_h }
+    end << {name: "Max Acceptable", data: Temperature.all.where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York'), 40.0] }}
     json res
   end
 
