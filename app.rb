@@ -21,7 +21,6 @@ class TemperatureMonitor < Sinatra::Base
 
   get '/data.json' do
     hours = params['hours'].to_i
-    binding.pry
     res = Temperature.distinct.pluck(:location).map do |sensors|
       { name: sensors, data: Temperature.where(location: sensors).where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York'), temp.temperature] }.to_h }
     end << {name: "Max Acceptable", data: Temperature.all.where('created_at > ?', hours.hours.ago).map { |temp| [temp.created_at.in_time_zone('America/New_York'), 40.0] }}
